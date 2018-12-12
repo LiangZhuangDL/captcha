@@ -35,9 +35,11 @@ public class CaptchaServiceImpl implements CaptchaService {
   public Map<String, String> createCaptcha() throws IOException {
     BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
     Graphics graphics = bufferedImage.getGraphics();
+    //设置背景颜色
     Color color = new Color(255, 255, 255);
     graphics.setColor(color);
     graphics.fillRect(0, 0, width, height);
+    //生成验证码文字
     List<String> words = new ArrayList<>();
     while (words.size() != 5) {
       String code = RandomStringUtils.randomAlphanumeric(100);
@@ -52,12 +54,13 @@ public class CaptchaServiceImpl implements CaptchaService {
       graphics.drawString(word, 20 * words.indexOf(word) + 5, 20);
       stringBuffer.append(word);
     });
-
+    //添加干扰线
     for(int i = 0;i<10;i++){
       graphics.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
       graphics.drawLine(random.nextInt(width), random.nextInt(height), random.nextInt(width), random.nextInt(height));
     }
 
+    //把流转成Base64码发给前台
     ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
     ImageIO.write(bufferedImage, "jpg", byteArrayOutputStream);
     byte[] bytes = byteArrayOutputStream.toByteArray();
