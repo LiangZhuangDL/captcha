@@ -1,0 +1,6 @@
+server:
+  port: 4500
+spring:
+  application:
+    name: captcha-service
+
