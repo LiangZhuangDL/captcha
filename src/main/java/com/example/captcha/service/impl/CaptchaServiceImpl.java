@@ -12,9 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import javax.imageio.ImageIO;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import sun.misc.BASE64Encoder;
 
@@ -27,12 +30,12 @@ import sun.misc.BASE64Encoder;
 @Service
 public class CaptchaServiceImpl implements CaptchaService {
 
-  private Integer width = 100;
+  @Autowired
+  private RedisTemplate<String, String> redisTemplate;
 
-  private Integer height = 35;
-
+  @SuppressWarnings("ConstantConditions")
   @Override
-  public Map<String, String> createCaptcha() throws IOException {
+  public Map<String, String> createCaptcha(Integer width, Integer height, Integer number) throws IOException {
     BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
     Graphics graphics = bufferedImage.getGraphics();
     //设置背景颜色
@@ -41,7 +44,7 @@ public class CaptchaServiceImpl implements CaptchaService {
     graphics.fillRect(0, 0, width, height);
     //生成验证码文字
     List<String> words = new ArrayList<>();
-    while (words.size() != 5) {
+    while (words.size() != number) {
       String code = RandomStringUtils.randomAlphanumeric(100);
       code = code.replaceAll("[\\W]", "").toUpperCase();
       words.add(StringUtils.substring(code, code.length() - 1, code.length()));
@@ -55,7 +58,7 @@ public class CaptchaServiceImpl implements CaptchaService {
       stringBuffer.append(word);
     });
     //添加干扰线
-    for(int i = 0;i<10;i++){
+    for (int i = 0; i < number * 2; i++) {
       graphics.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
       graphics.drawLine(random.nextInt(width), random.nextInt(height), random.nextInt(width), random.nextInt(height));
     }
@@ -68,8 +71,38 @@ public class CaptchaServiceImpl implements CaptchaService {
     String code = encoder.encodeBuffer(bytes).trim();
     code = code.replaceAll("\n", "").replaceAll("\r", "");
     Map<String, String> map = new HashMap<>();
-    map.put("code", stringBuffer.toString());
+    String token = RandomStringUtils.randomAlphanumeric(50);
+    try {
+      redisTemplate.hasKey(token);
+    } catch (NullPointerException e) {
+      token = RandomStringUtils.randomAlphanumeric(50);
+      e.printStackTrace();
+    }
+    redisTemplate.opsForValue().set(token, stringBuffer.toString(), 600L, TimeUnit.SECONDS);
+    map.put("token", token);
     map.put("captcha", "data:image/jpg;base64," + code);
+
+    return map;
+  }
+
+  @SuppressWarnings("ConstantConditions")
+  @Override
+  public Map<String, Object> checkCaptcha(String token, String captcha) {
+    Map<String, Object> map = new HashMap<>();
+    if(redisTemplate.hasKey(token)){
+      String code = redisTemplate.opsForValue().get(token);
+      redisTemplate.delete(token);
+      if(StringUtils.equals(code, captcha)){
+        map.put("result", true);
+      }else {
+        map.put("result", false);
+        map.put("message", "验证码错误");
+      }
+    }
+    else {
+      map.put("result", false);
+      map.put("message", "验证码过期，请重新生成验证码");
+    }
     return map;
   }
 }
