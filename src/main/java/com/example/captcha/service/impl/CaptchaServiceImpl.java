@@ -35,7 +35,7 @@ public class CaptchaServiceImpl implements CaptchaService {
   public Map<String, String> createCaptcha() throws IOException {
     BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
     Graphics graphics = bufferedImage.getGraphics();
-    Color color = new Color(200, 250, 250);
+    Color color = new Color(255, 255, 255);
     graphics.setColor(color);
     graphics.fillRect(0, 0, width, height);
     List<String> words = new ArrayList<>();
