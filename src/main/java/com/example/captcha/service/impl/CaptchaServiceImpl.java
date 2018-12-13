@@ -47,19 +47,20 @@ public class CaptchaServiceImpl implements CaptchaService {
     while (words.size() != number) {
       String code = RandomStringUtils.randomAlphanumeric(100);
       code = code.replaceAll("[\\W]", "").toUpperCase();
+      code = code.replaceAll("_", "").toUpperCase();
       words.add(StringUtils.substring(code, code.length() - 1, code.length()));
     }
     Random random = new Random();
     StringBuffer stringBuffer = new StringBuffer();
     words.forEach(word -> {
-      graphics.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
+      graphics.setColor(new Color(random.nextInt(120), random.nextInt(120), random.nextInt(120)));
       graphics.setFont(new Font("Microsoft Yahei", Font.BOLD, 18));
       graphics.drawString(word, 20 * words.indexOf(word) + 5, 20);
       stringBuffer.append(word);
     });
     //添加干扰线
     for (int i = 0; i < number * 2; i++) {
-      graphics.setColor(new Color(random.nextInt(255), random.nextInt(255), random.nextInt(255)));
+      graphics.setColor(new Color(random.nextInt(180), random.nextInt(180), random.nextInt(180)));
       graphics.drawLine(random.nextInt(width), random.nextInt(height), random.nextInt(width), random.nextInt(height));
     }
 
