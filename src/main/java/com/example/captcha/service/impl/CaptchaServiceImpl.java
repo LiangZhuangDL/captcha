@@ -72,11 +72,8 @@ public class CaptchaServiceImpl implements CaptchaService {
     code = code.replaceAll("\n", "").replaceAll("\r", "");
     Map<String, String> map = new HashMap<>();
     String token = RandomStringUtils.randomAlphanumeric(50);
-    try {
-      redisTemplate.hasKey(token);
-    } catch (NullPointerException e) {
+    while (checkToken(token)){
       token = RandomStringUtils.randomAlphanumeric(50);
-      e.printStackTrace();
     }
     redisTemplate.opsForValue().set(token, stringBuffer.toString(), 600L, TimeUnit.SECONDS);
     map.put("token", token);
@@ -104,5 +101,14 @@ public class CaptchaServiceImpl implements CaptchaService {
       map.put("message", "验证码过期，请重新生成验证码");
     }
     return map;
+  }
+
+  private Boolean checkToken(String token){
+    try{
+      redisTemplate.hasKey(token);
+    }catch (NullPointerException e){
+      return false;
+    }
+    return true;
   }
 }
