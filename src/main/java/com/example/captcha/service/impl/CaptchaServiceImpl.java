@@ -54,8 +54,8 @@ public class CaptchaServiceImpl implements CaptchaService {
     StringBuffer stringBuffer = new StringBuffer();
     words.forEach(word -> {
       graphics.setColor(new Color(random.nextInt(120), random.nextInt(120), random.nextInt(120)));
-      graphics.setFont(new Font("Microsoft Yahei", Font.BOLD, 18));
-      graphics.drawString(word, 20 * words.indexOf(word) + 5, 20);
+      graphics.setFont(new Font("Microsoft Yahei", Font.BOLD, 20));
+      graphics.drawString(word, 20 * words.indexOf(word) + 15, (width - 20) / number);
       stringBuffer.append(word);
     });
     //添加干扰线
@@ -73,7 +73,7 @@ public class CaptchaServiceImpl implements CaptchaService {
     code = code.replaceAll("\n", "").replaceAll("\r", "");
     Map<String, String> map = new HashMap<>();
     String token = RandomStringUtils.randomAlphanumeric(50);
-    while (checkToken(token)){
+    while (checkToken(token)) {
       token = RandomStringUtils.randomAlphanumeric(50);
     }
     redisTemplate.opsForValue().set(token, stringBuffer.toString(), 600L, TimeUnit.SECONDS);
@@ -94,9 +94,9 @@ public class CaptchaServiceImpl implements CaptchaService {
     } else {
       String code = redisTemplate.opsForValue().get(token);
       redisTemplate.delete(token);
-      if(StringUtils.equals(code, captcha)){
+      if (StringUtils.equals(code, captcha)) {
         map.put("result", true);
-      }else {
+      } else {
         map.put("result", false);
         map.put("message", "验证码错误");
       }
@@ -104,12 +104,11 @@ public class CaptchaServiceImpl implements CaptchaService {
     return map;
   }
 
-  private Boolean checkToken(String token){
-    try{
-      redisTemplate.hasKey(token);
-    }catch (NullPointerException e){
+  private Boolean checkToken(String token) {
+    try {
+      return redisTemplate.hasKey(token);
+    } catch (NullPointerException e) {
       return false;
     }
-    return true;
   }
 }
