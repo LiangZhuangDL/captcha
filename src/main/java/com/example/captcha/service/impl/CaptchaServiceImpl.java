@@ -82,11 +82,15 @@ public class CaptchaServiceImpl implements CaptchaService {
     return map;
   }
 
+
   @SuppressWarnings("ConstantConditions")
   @Override
   public Map<String, Object> checkCaptcha(String token, String captcha) {
     Map<String, Object> map = new HashMap<>();
-    if(redisTemplate.hasKey(token)){
+    if (!redisTemplate.hasKey(token)) {
+      map.put("result", false);
+      map.put("message", "验证码过期，请重新生成验证码");
+    } else {
       String code = redisTemplate.opsForValue().get(token);
       redisTemplate.delete(token);
       if(StringUtils.equals(code, captcha)){
@@ -95,10 +99,6 @@ public class CaptchaServiceImpl implements CaptchaService {
         map.put("result", false);
         map.put("message", "验证码错误");
       }
-    }
-    else {
-      map.put("result", false);
-      map.put("message", "验证码过期，请重新生成验证码");
     }
     return map;
   }
